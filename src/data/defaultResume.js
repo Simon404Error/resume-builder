@@ -1,0 +1,81 @@
+export const defaultResume = {
+  personal: {
+    fullName: '张三',
+    title: '高级前端工程师',
+    email: 'zhangsan@example.com',
+    phone: '138-0000-0000',
+    location: '北京',
+    website: 'https://zhangsan.dev',
+    github: 'github.com/zhangsan',
+    linkedin: 'linkedin.com/in/zhangsan',
+    summary: '拥有8年Web前端开发经验，精通React生态，主导过多个大型企业级项目。热衷于性能优化与工程化建设，具备良好的团队协作与沟通能力。',
+  },
+  experience: [
+    {
+      id: 'exp1',
+      company: '字节跳动',
+      position: '高级前端工程师',
+      startDate: '2021-03',
+      endDate: '至今',
+      description: '负责抖音电商前端架构设计与核心模块开发。\n- 主导微前端架构落地，提升多团队协作效率40%\n- 搭建组件库，覆盖200+业务组件\n- 优化首屏加载性能，LCP从3.2s降至1.1s',
+    },
+    {
+      id: 'exp2',
+      company: '阿里巴巴',
+      position: '前端工程师',
+      startDate: '2018-07',
+      endDate: '2021-02',
+      description: '参与淘宝商家端平台的前端开发工作。\n- 负责商品管理模块的迭代与维护\n- 使用TypeScript重构核心业务逻辑\n- 编写E2E测试，覆盖率达85%',
+    },
+  ],
+  education: [
+    {
+      id: 'edu1',
+      school: '北京大学',
+      degree: '硕士',
+      major: '计算机科学与技术',
+      startDate: '2015-09',
+      endDate: '2018-06',
+    },
+    {
+      id: 'edu2',
+      school: '武汉大学',
+      degree: '学士',
+      major: '软件工程',
+      startDate: '2011-09',
+      endDate: '2015-06',
+    },
+  ],
+  skills: [
+    { id: 'sk1', name: 'React / Vue / Angular', level: 95 },
+    { id: 'sk2', name: 'TypeScript / JavaScript', level: 90 },
+    { id: 'sk3', name: 'Node.js / Express', level: 85 },
+    { id: 'sk4', name: 'Webpack / Vite / Rollup', level: 88 },
+    { id: 'sk5', name: 'CSS / Tailwind / Sass', level: 90 },
+    { id: 'sk6', name: 'Docker / CI/CD', level: 75 },
+  ],
+  projects: [
+    {
+      id: 'proj1',
+      name: '微前端框架 - QiankunX',
+      role: '核心开发者',
+      description: '基于qiankun的企业级微前端解决方案，支持多框架混合运行、沙箱隔离与共享依赖。',
+      url: 'https://github.com/zhangsan/qiankunx',
+    },
+    {
+      id: 'proj2',
+      name: 'React组件库 - StarUI',
+      role: '项目负责人',
+      description: '企业级React UI组件库，提供200+高质量组件，支持主题定制与国际化。',
+      url: 'https://starui.dev',
+    },
+  ],
+  certifications: [
+    { id: 'cert1', name: 'AWS Solutions Architect Associate', date: '2022' },
+    { id: 'cert2', name: 'PMP项目管理认证', date: '2021' },
+  ],
+  languages: [
+    { id: 'lang1', name: '中文', level: '母语' },
+    { id: 'lang2', name: '英语', level: '流利 (CET-6)' },
+  ],
+};
