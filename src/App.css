@@ -435,6 +435,20 @@ html, body, #root {
   cursor: grab;
 }
 
+.drag-handle-btn {
+  cursor: grab;
+  color: var(--text-muted);
+}
+
+.drag-handle-btn:active {
+  cursor: grabbing;
+  color: var(--primary);
+}
+
+.sortable-item {
+  position: relative;
+}
+
 /* ========== Preview Panel ========== */
 .preview-panel {
   flex: 1;

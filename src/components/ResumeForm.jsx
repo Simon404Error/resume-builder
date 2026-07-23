@@ -1,7 +1,27 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export default function ResumeForm({ resume, onChange, sectionVisibility, onToggleSection }) {
+  const [activeSection, setActiveSection] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
   const [expandedSections, setExpandedSections] = useState({
     personal: true,
     experience: true,
@@ -38,6 +58,29 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
     });
   };
 
+  const handleDragStart = useCallback((event) => {
+    setActiveSection(event.active.data.current?.section);
+  }, []);
+
+  const handleDragEnd = useCallback((event) => {
+    setActiveSection(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const section = active.data.current?.section;
+    if (!section) return;
+
+    const items = resume[section];
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    onChange({
+      ...resume,
+      [section]: arrayMove(items, oldIndex, newIndex),
+    });
+  }, [resume, onChange]);
+
   const SectionHeader = ({ title, sectionKey, showToggle, onToggle }) => (
     <div className="form-section-header" onClick={() => toggleSection(sectionKey)}>
       <div className="form-section-header-left">
@@ -56,6 +99,44 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
           </label>
         )}
       </div>
+    </div>
+  );
+
+  // Renders a sortable list section
+  const renderSection = (sectionKey, items, renderItem, template, addLabel) => (
+    <div className="form-section">
+      <SectionHeader title={SECTION_LABELS[sectionKey]} sectionKey={sectionKey} showToggle onToggle={onToggleSection} />
+      {expandedSections[sectionKey] && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="form-section-body">
+            <SortableContext
+              items={items.map((item) => item.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {items.map((item, i) => (
+                <SortableItem
+                  key={item.id}
+                  id={item.id}
+                  section={sectionKey}
+                  index={i}
+                  onRemove={() => removeItem(sectionKey, item.id)}
+                  isActive={activeSection === sectionKey}
+                >
+                  {renderItem(item)}
+                </SortableItem>
+              ))}
+            </SortableContext>
+            <button className="btn-add" onClick={() => addItem(sectionKey, template)}>
+              <Plus size={14} /> {addLabel}
+            </button>
+          </div>
+        </DndContext>
+      )}
     </div>
   );
 
@@ -86,132 +167,113 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
       </div>
 
       {/* Experience */}
-      <div className="form-section">
-        <SectionHeader title="工作经历" sectionKey="experience" showToggle onToggle={onToggleSection} />
-        {expandedSections.experience && (
-          <div className="form-section-body">
-            {resume.experience.map((exp, i) => (
-              <ArrayItem key={exp.id} onRemove={() => removeItem('experience', exp.id)} index={i}>
-                <FormField label="公司" value={exp.company} onChange={(v) => updateItem('experience', exp.id, 'company', v)} />
-                <FormField label="职位" value={exp.position} onChange={(v) => updateItem('experience', exp.id, 'position', v)} />
-                <FormRow>
-                  <FormField label="开始" value={exp.startDate} onChange={(v) => updateItem('experience', exp.id, 'startDate', v)} placeholder="2021-03" />
-                  <FormField label="结束" value={exp.endDate} onChange={(v) => updateItem('experience', exp.id, 'endDate', v)} placeholder="至今" />
-                </FormRow>
-                <FormArea label="描述" value={exp.description} onChange={(v) => updateItem('experience', exp.id, 'description', v)} />
-              </ArrayItem>
-            ))}
-            <button className="btn-add" onClick={() => addItem('experience', { company: '', position: '', startDate: '', endDate: '', description: '' })}>
-              <Plus size={14} /> 添加经历
-            </button>
-          </div>
-        )}
-      </div>
+      {renderSection('experience', resume.experience, (exp) => (
+        <>
+          <FormField label="公司" value={exp.company} onChange={(v) => updateItem('experience', exp.id, 'company', v)} />
+          <FormField label="职位" value={exp.position} onChange={(v) => updateItem('experience', exp.id, 'position', v)} />
+          <FormRow>
+            <FormField label="开始" value={exp.startDate} onChange={(v) => updateItem('experience', exp.id, 'startDate', v)} placeholder="2021-03" />
+            <FormField label="结束" value={exp.endDate} onChange={(v) => updateItem('experience', exp.id, 'endDate', v)} placeholder="至今" />
+          </FormRow>
+          <FormArea label="描述" value={exp.description} onChange={(v) => updateItem('experience', exp.id, 'description', v)} />
+        </>
+      ), { company: '', position: '', startDate: '', endDate: '', description: '' }, '添加经历')}
 
       {/* Education */}
-      <div className="form-section">
-        <SectionHeader title="教育背景" sectionKey="education" showToggle onToggle={onToggleSection} />
-        {expandedSections.education && (
-          <div className="form-section-body">
-            {resume.education.map((edu, i) => (
-              <ArrayItem key={edu.id} onRemove={() => removeItem('education', edu.id)} index={i}>
-                <FormField label="学校" value={edu.school} onChange={(v) => updateItem('education', edu.id, 'school', v)} />
-                <FormRow>
-                  <FormField label="学位" value={edu.degree} onChange={(v) => updateItem('education', edu.id, 'degree', v)} />
-                  <FormField label="专业" value={edu.major} onChange={(v) => updateItem('education', edu.id, 'major', v)} />
-                </FormRow>
-                <FormRow>
-                  <FormField label="开始" value={edu.startDate} onChange={(v) => updateItem('education', edu.id, 'startDate', v)} />
-                  <FormField label="结束" value={edu.endDate} onChange={(v) => updateItem('education', edu.id, 'endDate', v)} />
-                </FormRow>
-              </ArrayItem>
-            ))}
-            <button className="btn-add" onClick={() => addItem('education', { school: '', degree: '', major: '', startDate: '', endDate: '' })}>
-              <Plus size={14} /> 添加教育
-            </button>
-          </div>
-        )}
-      </div>
+      {renderSection('education', resume.education, (edu) => (
+        <>
+          <FormField label="学校" value={edu.school} onChange={(v) => updateItem('education', edu.id, 'school', v)} />
+          <FormRow>
+            <FormField label="学位" value={edu.degree} onChange={(v) => updateItem('education', edu.id, 'degree', v)} />
+            <FormField label="专业" value={edu.major} onChange={(v) => updateItem('education', edu.id, 'major', v)} />
+          </FormRow>
+          <FormRow>
+            <FormField label="开始" value={edu.startDate} onChange={(v) => updateItem('education', edu.id, 'startDate', v)} />
+            <FormField label="结束" value={edu.endDate} onChange={(v) => updateItem('education', edu.id, 'endDate', v)} />
+          </FormRow>
+        </>
+      ), { school: '', degree: '', major: '', startDate: '', endDate: '' }, '添加教育')}
 
       {/* Skills */}
-      <div className="form-section">
-        <SectionHeader title="专业技能" sectionKey="skills" showToggle onToggle={onToggleSection} />
-        {expandedSections.skills && (
-          <div className="form-section-body">
-            {resume.skills.map((skill, i) => (
-              <ArrayItem key={skill.id} onRemove={() => removeItem('skills', skill.id)} index={i} compact>
-                <FormRow>
-                  <FormField label="技能" value={skill.name} onChange={(v) => updateItem('skills', skill.id, 'name', v)} />
-                  <FormField label="熟练度" value={skill.level} onChange={(v) => updateItem('skills', skill.id, 'level', Number(v) || 0)} type="number" min={0} max={100} />
-                </FormRow>
-              </ArrayItem>
-            ))}
-            <button className="btn-add" onClick={() => addItem('skills', { name: '', level: 80 })}>
-              <Plus size={14} /> 添加技能
-            </button>
-          </div>
-        )}
-      </div>
+      {renderSection('skills', resume.skills, (skill) => (
+        <FormRow>
+          <FormField label="技能" value={skill.name} onChange={(v) => updateItem('skills', skill.id, 'name', v)} />
+          <FormField label="熟练度" value={skill.level} onChange={(v) => updateItem('skills', skill.id, 'level', Number(v) || 0)} type="number" min={0} max={100} />
+        </FormRow>
+      ), { name: '', level: 80 }, '添加技能')}
 
       {/* Projects */}
-      <div className="form-section">
-        <SectionHeader title="项目经验" sectionKey="projects" showToggle onToggle={onToggleSection} />
-        {expandedSections.projects && (
-          <div className="form-section-body">
-            {resume.projects.map((proj, i) => (
-              <ArrayItem key={proj.id} onRemove={() => removeItem('projects', proj.id)} index={i}>
-                <FormField label="项目名称" value={proj.name} onChange={(v) => updateItem('projects', proj.id, 'name', v)} />
-                <FormField label="角色" value={proj.role} onChange={(v) => updateItem('projects', proj.id, 'role', v)} />
-                <FormField label="链接" value={proj.url || ''} onChange={(v) => updateItem('projects', proj.id, 'url', v)} />
-                <FormArea label="描述" value={proj.description} onChange={(v) => updateItem('projects', proj.id, 'description', v)} />
-              </ArrayItem>
-            ))}
-            <button className="btn-add" onClick={() => addItem('projects', { name: '', role: '', url: '', description: '' })}>
-              <Plus size={14} /> 添加项目
-            </button>
-          </div>
-        )}
-      </div>
+      {renderSection('projects', resume.projects, (proj) => (
+        <>
+          <FormField label="项目名称" value={proj.name} onChange={(v) => updateItem('projects', proj.id, 'name', v)} />
+          <FormField label="角色" value={proj.role} onChange={(v) => updateItem('projects', proj.id, 'role', v)} />
+          <FormField label="链接" value={proj.url || ''} onChange={(v) => updateItem('projects', proj.id, 'url', v)} />
+          <FormArea label="描述" value={proj.description} onChange={(v) => updateItem('projects', proj.id, 'description', v)} />
+        </>
+      ), { name: '', role: '', url: '', description: '' }, '添加项目')}
 
       {/* Certifications */}
-      <div className="form-section">
-        <SectionHeader title="证书" sectionKey="certifications" showToggle onToggle={onToggleSection} />
-        {expandedSections.certifications && (
-          <div className="form-section-body">
-            {resume.certifications.map((cert, i) => (
-              <ArrayItem key={cert.id} onRemove={() => removeItem('certifications', cert.id)} index={i} compact>
-                <FormRow>
-                  <FormField label="证书名称" value={cert.name} onChange={(v) => updateItem('certifications', cert.id, 'name', v)} />
-                  <FormField label="获得日期" value={cert.date} onChange={(v) => updateItem('certifications', cert.id, 'date', v)} />
-                </FormRow>
-              </ArrayItem>
-            ))}
-            <button className="btn-add" onClick={() => addItem('certifications', { name: '', date: '' })}>
-              <Plus size={14} /> 添加证书
-            </button>
-          </div>
-        )}
-      </div>
+      {renderSection('certifications', resume.certifications, (cert) => (
+        <FormRow>
+          <FormField label="证书名称" value={cert.name} onChange={(v) => updateItem('certifications', cert.id, 'name', v)} />
+          <FormField label="获得日期" value={cert.date} onChange={(v) => updateItem('certifications', cert.id, 'date', v)} />
+        </FormRow>
+      ), { name: '', date: '' }, '添加证书')}
 
       {/* Languages */}
-      <div className="form-section">
-        <SectionHeader title="语言" sectionKey="languages" showToggle onToggle={onToggleSection} />
-        {expandedSections.languages && (
-          <div className="form-section-body">
-            {resume.languages.map((lang, i) => (
-              <ArrayItem key={lang.id} onRemove={() => removeItem('languages', lang.id)} index={i} compact>
-                <FormRow>
-                  <FormField label="语言" value={lang.name} onChange={(v) => updateItem('languages', lang.id, 'name', v)} />
-                  <FormField label="水平" value={lang.level} onChange={(v) => updateItem('languages', lang.id, 'level', v)} />
-                </FormRow>
-              </ArrayItem>
-            ))}
-            <button className="btn-add" onClick={() => addItem('languages', { name: '', level: '' })}>
-              <Plus size={14} /> 添加语言
-            </button>
-          </div>
-        )}
+      {renderSection('languages', resume.languages, (lang) => (
+        <FormRow>
+          <FormField label="语言" value={lang.name} onChange={(v) => updateItem('languages', lang.id, 'name', v)} />
+          <FormField label="水平" value={lang.level} onChange={(v) => updateItem('languages', lang.id, 'level', v)} />
+        </FormRow>
+      ), { name: '', level: '' }, '添加语言')}
+    </div>
+  );
+}
+
+const SECTION_LABELS = {
+  experience: '工作经历',
+  education: '教育背景',
+  skills: '专业技能',
+  projects: '项目经验',
+  certifications: '证书',
+  languages: '语言',
+};
+
+function SortableItem({ id, section, index, onRemove, children, isActive }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, data: { section } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="array-item sortable-item">
+      <div className="array-item-header">
+        <button
+          className="btn-icon drag-handle-btn"
+          {...attributes}
+          {...listeners}
+          title="拖动排序"
+        >
+          <GripVertical size={14} />
+        </button>
+        <span className="array-item-index">#{index + 1}</span>
+        <button className="btn-icon btn-remove" onClick={onRemove} title="删除">
+          <Trash2 size={14} />
+        </button>
       </div>
+      <div className="array-item-body">{children}</div>
     </div>
   );
 }
@@ -243,19 +305,4 @@ function FormArea({ label, value, onChange }) {
 
 function FormRow({ children }) {
   return <div className="form-row">{children}</div>;
-}
-
-function ArrayItem({ children, onRemove, index, compact = false }) {
-  return (
-    <div className={`array-item ${compact ? 'array-item-compact' : ''}`}>
-      <div className="array-item-header">
-        <GripVertical size={14} className="drag-handle" />
-        <span className="array-item-index">#{index + 1}</span>
-        <button className="btn-icon btn-remove" onClick={onRemove} title="删除">
-          <Trash2 size={14} />
-        </button>
-      </div>
-      <div className="array-item-body">{children}</div>
-    </div>
-  );
 }
