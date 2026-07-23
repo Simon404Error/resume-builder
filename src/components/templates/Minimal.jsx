@@ -1,7 +1,7 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink } from 'lucide-react';
 
 export default function Minimal({ data, accentColor = '#2d2d2d' }) {
-  const { personal, experience, education, skills, projects, certifications, languages } = data;
+  const { personal, experience, education, skills, projects, certifications, languages, customSections = [] } = data;
 
   return (
     <div className="template minimal-template" style={{ '--accent': accentColor }}>
@@ -107,6 +107,22 @@ export default function Minimal({ data, accentColor = '#2d2d2d' }) {
           )}
         </div>
       )}
+
+      {customSections.map((cs) => (
+        <section key={cs.id} className="minimal-section">
+          <h3 className="minimal-section-title">{cs.title}</h3>
+          {cs.items.map((item) => (
+            <div key={item.id} className="minimal-entry">
+              <div className="minimal-entry-row">
+                <strong>{item.title}</strong>
+                {item.subtitle && <span className="minimal-entry-org">{item.subtitle}</span>}
+                {item.date && <span className="minimal-entry-date">{item.date}</span>}
+              </div>
+              {item.description && <p className="minimal-entry-desc">{item.description}</p>}
+            </div>
+          ))}
+        </section>
+      ))}
     </div>
   );
 }

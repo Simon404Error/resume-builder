@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Upload, Image } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 export default function ResumeForm({ resume, onChange, sectionVisibility, onToggleSection }) {
   const [activeSection, setActiveSection] = useState(null);
+  const fileInputRef = useRef(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -40,6 +41,21 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
     onChange({ ...resume, personal: { ...resume.personal, [field]: value } });
   };
 
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      updatePersonal('photo', ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    updatePersonal('photo', '');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const addItem = (section, template) => {
     const newItem = { ...template, id: `${section}${Date.now()}` };
     onChange({ ...resume, [section]: [...resume[section], newItem] });
@@ -54,6 +70,70 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
       ...resume,
       [section]: resume[section].map((item) =>
         item.id === id ? { ...item, [field]: value } : item
+      ),
+    });
+  };
+
+  // Custom sections
+  const addCustomSection = () => {
+    const newSection = {
+      id: `cs${Date.now()}`,
+      title: '新模块',
+      items: [],
+    };
+    onChange({ ...resume, customSections: [...resume.customSections, newSection] });
+  };
+
+  const removeCustomSection = (id) => {
+    onChange({
+      ...resume,
+      customSections: resume.customSections.filter((s) => s.id !== id),
+    });
+  };
+
+  const updateCustomSection = (id, field, value) => {
+    onChange({
+      ...resume,
+      customSections: resume.customSections.map((s) =>
+        s.id === id ? { ...s, [field]: value } : s
+      ),
+    });
+  };
+
+  const addCustomItem = (sectionId) => {
+    onChange({
+      ...resume,
+      customSections: resume.customSections.map((s) =>
+        s.id === sectionId
+          ? { ...s, items: [...s.items, { id: `ci${Date.now()}`, title: '', subtitle: '', date: '', description: '' }] }
+          : s
+      ),
+    });
+  };
+
+  const removeCustomItem = (sectionId, itemId) => {
+    onChange({
+      ...resume,
+      customSections: resume.customSections.map((s) =>
+        s.id === sectionId
+          ? { ...s, items: s.items.filter((i) => i.id !== itemId) }
+          : s
+      ),
+    });
+  };
+
+  const updateCustomItem = (sectionId, itemId, field, value) => {
+    onChange({
+      ...resume,
+      customSections: resume.customSections.map((s) =>
+        s.id === sectionId
+          ? {
+              ...s,
+              items: s.items.map((i) =>
+                i.id === itemId ? { ...i, [field]: value } : i
+              ),
+            }
+          : s
       ),
     });
   };
@@ -102,7 +182,6 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
     </div>
   );
 
-  // Renders a sortable list section
   const renderSection = (sectionKey, items, renderItem, template, addLabel) => (
     <div className="form-section">
       <SectionHeader title={SECTION_LABELS[sectionKey]} sectionKey={sectionKey} showToggle onToggle={onToggleSection} />
@@ -114,10 +193,7 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
           onDragEnd={handleDragEnd}
         >
           <div className="form-section-body">
-            <SortableContext
-              items={items.map((item) => item.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
               {items.map((item, i) => (
                 <SortableItem
                   key={item.id}
@@ -125,7 +201,6 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
                   section={sectionKey}
                   index={i}
                   onRemove={() => removeItem(sectionKey, item.id)}
-                  isActive={activeSection === sectionKey}
                 >
                   {renderItem(item)}
                 </SortableItem>
@@ -147,6 +222,29 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
         <SectionHeader title="个人信息" sectionKey="personal" />
         {expandedSections.personal && (
           <div className="form-section-body">
+            {/* Photo Upload */}
+            <div className="photo-upload-area">
+              {resume.personal.photo ? (
+                <div className="photo-preview">
+                  <img src={resume.personal.photo} alt="头像" />
+                  <button className="btn-icon photo-remove" onClick={handleRemovePhoto} title="移除照片">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button className="photo-upload-btn" onClick={() => fileInputRef.current?.click()} title="上传照片">
+                  <Upload size={18} />
+                  <span>上传照片</span>
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
             <FormField label="姓名" value={resume.personal.fullName} onChange={(v) => updatePersonal('fullName', v)} />
             <FormField label="职位" value={resume.personal.title} onChange={(v) => updatePersonal('title', v)} />
             <FormRow>
@@ -227,6 +325,58 @@ export default function ResumeForm({ resume, onChange, sectionVisibility, onTogg
           <FormField label="水平" value={lang.level} onChange={(v) => updateItem('languages', lang.id, 'level', v)} />
         </FormRow>
       ), { name: '', level: '' }, '添加语言')}
+
+      {/* Custom Sections */}
+      {resume.customSections.map((cs) => (
+        <div key={cs.id} className="form-section">
+          <div className="form-section-header" onClick={() => toggleSection(cs.id)}>
+            <div className="form-section-header-left">
+              {expandedSections[cs.id] ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+              <input
+                className="custom-section-title-input"
+                value={cs.title}
+                onChange={(e) => updateCustomSection(cs.id, 'title', e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                placeholder="模块名称"
+              />
+            </div>
+            <div className="form-section-header-right" onClick={(e) => e.stopPropagation()}>
+              <button className="btn-icon btn-remove" onClick={() => removeCustomSection(cs.id)} title="删除模块">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+          {expandedSections[cs.id] !== false && (
+            <div className="form-section-body">
+              {cs.items.map((item, i) => (
+                <div key={item.id} className="array-item">
+                  <div className="array-item-header">
+                    <GripVertical size={14} className="drag-handle" />
+                    <span className="array-item-index">#{i + 1}</span>
+                    <button className="btn-icon btn-remove" onClick={() => removeCustomItem(cs.id, item.id)} title="删除">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className="array-item-body">
+                    <FormField label="标题" value={item.title} onChange={(v) => updateCustomItem(cs.id, item.id, 'title', v)} />
+                    <FormField label="副标题" value={item.subtitle} onChange={(v) => updateCustomItem(cs.id, item.id, 'subtitle', v)} />
+                    <FormField label="日期" value={item.date} onChange={(v) => updateCustomItem(cs.id, item.id, 'date', v)} placeholder="2023" />
+                    <FormArea label="描述" value={item.description} onChange={(v) => updateCustomItem(cs.id, item.id, 'description', v)} />
+                  </div>
+                </div>
+              ))}
+              <button className="btn-add" onClick={() => addCustomItem(cs.id)}>
+                <Plus size={14} /> 添加条目
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Add Custom Section Button */}
+      <button className="btn-add btn-add-section" onClick={addCustomSection}>
+        <Plus size={14} /> 添加自定义模块
+      </button>
     </div>
   );
 }
@@ -240,7 +390,7 @@ const SECTION_LABELS = {
   languages: '语言',
 };
 
-function SortableItem({ id, section, index, onRemove, children, isActive }) {
+function SortableItem({ id, section, index, onRemove, children }) {
   const {
     attributes,
     listeners,
@@ -260,12 +410,7 @@ function SortableItem({ id, section, index, onRemove, children, isActive }) {
   return (
     <div ref={setNodeRef} style={style} className="array-item sortable-item">
       <div className="array-item-header">
-        <button
-          className="btn-icon drag-handle-btn"
-          {...attributes}
-          {...listeners}
-          title="拖动排序"
-        >
+        <button className="btn-icon drag-handle-btn" {...attributes} {...listeners} title="拖动排序">
           <GripVertical size={14} />
         </button>
         <span className="array-item-index">#{index + 1}</span>

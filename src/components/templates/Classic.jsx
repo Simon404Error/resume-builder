@@ -1,7 +1,7 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink } from 'lucide-react';
 
 export default function Classic({ data, accentColor = '#1a3a5c' }) {
-  const { personal, experience, education, skills, projects, certifications, languages } = data;
+  const { personal, experience, education, skills, projects, certifications, languages, customSections = [] } = data;
 
   return (
     <div className="template classic-template" style={{ '--accent': accentColor }}>
@@ -70,9 +70,7 @@ export default function Classic({ data, accentColor = '#1a3a5c' }) {
           <div className="skills-grid">
             {skills.map((skill) => (
               <div key={skill.id} className="skill-item">
-                <div className="skill-header">
-                  <span>{skill.name}</span>
-                </div>
+                <div className="skill-header"><span>{skill.name}</span></div>
                 <div className="skill-bar">
                   <div className="skill-fill" style={{ width: `${skill.level || 0}%` }} />
                 </div>
@@ -121,6 +119,24 @@ export default function Classic({ data, accentColor = '#1a3a5c' }) {
           </section>
         )}
       </div>
+
+      {customSections.map((cs) => (
+        <section key={cs.id} className="classic-section">
+          <h3 className="section-title">{cs.title}</h3>
+          {cs.items.map((item) => (
+            <div key={item.id} className="timeline-item">
+              <div className="timeline-header">
+                <div className="timeline-left">
+                  <h4 className="item-title">{item.title}</h4>
+                  {item.subtitle && <span className="item-subtitle">{item.subtitle}</span>}
+                </div>
+                {item.date && <span className="timeline-date">{item.date}</span>}
+              </div>
+              {item.description && <p className="item-description">{item.description}</p>}
+            </div>
+          ))}
+        </section>
+      ))}
     </div>
   );
 }

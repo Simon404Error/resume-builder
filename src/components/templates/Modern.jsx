@@ -1,16 +1,20 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink } from 'lucide-react';
 
 export default function Modern({ data, accentColor = '#4f46e5' }) {
-  const { personal, experience, education, skills, projects, certifications, languages } = data;
+  const { personal, experience, education, skills, projects, certifications, languages, customSections = [] } = data;
 
   return (
     <div className="template modern-template" style={{ '--accent': accentColor }}>
       <div className="modern-layout">
         <aside className="modern-sidebar">
           <div className="sidebar-avatar">
-            <div className="avatar-placeholder">
-              {personal.fullName?.charAt(0) || '?'}
-            </div>
+            {personal.photo ? (
+              <img src={personal.photo} alt="头像" className="avatar-photo" />
+            ) : (
+              <div className="avatar-placeholder">
+                {personal.fullName?.charAt(0) || '?'}
+              </div>
+            )}
           </div>
 
           <div className="sidebar-section">
@@ -61,20 +65,14 @@ export default function Modern({ data, accentColor = '#4f46e5' }) {
 
           {personal.summary && (
             <section className="modern-section">
-              <h3 className="modern-section-title">
-                <span className="title-accent" />
-                个人简介
-              </h3>
+              <h3 className="modern-section-title"><span className="title-accent" />个人简介</h3>
               <p className="modern-summary">{personal.summary}</p>
             </section>
           )}
 
           {experience.length > 0 && (
             <section className="modern-section">
-              <h3 className="modern-section-title">
-                <span className="title-accent" />
-                工作经历
-              </h3>
+              <h3 className="modern-section-title"><span className="title-accent" />工作经历</h3>
               {experience.map((exp) => (
                 <div key={exp.id} className="modern-item">
                   <div className="modern-item-header">
@@ -89,10 +87,7 @@ export default function Modern({ data, accentColor = '#4f46e5' }) {
 
           {education.length > 0 && (
             <section className="modern-section">
-              <h3 className="modern-section-title">
-                <span className="title-accent" />
-                教育背景
-              </h3>
+              <h3 className="modern-section-title"><span className="title-accent" />教育背景</h3>
               {education.map((edu) => (
                 <div key={edu.id} className="modern-item">
                   <div className="modern-item-header">
@@ -107,10 +102,7 @@ export default function Modern({ data, accentColor = '#4f46e5' }) {
 
           {projects.length > 0 && (
             <section className="modern-section">
-              <h3 className="modern-section-title">
-                <span className="title-accent" />
-                项目经验
-              </h3>
+              <h3 className="modern-section-title"><span className="title-accent" />项目经验</h3>
               {projects.map((proj) => (
                 <div key={proj.id} className="modern-item">
                   <div className="modern-item-header">
@@ -124,10 +116,7 @@ export default function Modern({ data, accentColor = '#4f46e5' }) {
 
           {certifications.length > 0 && (
             <section className="modern-section">
-              <h3 className="modern-section-title">
-                <span className="title-accent" />
-                证书
-              </h3>
+              <h3 className="modern-section-title"><span className="title-accent" />证书</h3>
               <div className="modern-tags">
                 {certifications.map((cert) => (
                   <span key={cert.id} className="modern-tag">{cert.name} ({cert.date})</span>
@@ -135,6 +124,21 @@ export default function Modern({ data, accentColor = '#4f46e5' }) {
               </div>
             </section>
           )}
+
+          {customSections.map((cs) => (
+            <section key={cs.id} className="modern-section">
+              <h3 className="modern-section-title"><span className="title-accent" />{cs.title}</h3>
+              {cs.items.map((item) => (
+                <div key={item.id} className="modern-item">
+                  <div className="modern-item-header">
+                    <h4>{item.title} {item.subtitle && <span className="modern-company">{item.subtitle}</span>}</h4>
+                    {item.date && <span className="modern-date">{item.date}</span>}
+                  </div>
+                  {item.description && <p className="modern-description">{item.description}</p>}
+                </div>
+              ))}
+            </section>
+          ))}
         </main>
       </div>
     </div>

@@ -8,6 +8,7 @@ export const defaultResume = {
     website: 'https://zhangsan.dev',
     github: 'github.com/zhangsan',
     linkedin: 'linkedin.com/in/zhangsan',
+    photo: '',
     summary: '拥有8年Web前端开发经验，精通React生态，主导过多个大型企业级项目。热衷于性能优化与工程化建设，具备良好的团队协作与沟通能力。',
   },
   experience: [
@@ -78,4 +79,5 @@ export const defaultResume = {
     { id: 'lang1', name: '中文', level: '母语' },
     { id: 'lang2', name: '英语', level: '流利 (CET-6)' },
   ],
+  customSections: [],
 };
