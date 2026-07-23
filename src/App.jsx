@@ -3,6 +3,7 @@ import Toolbar from './components/Toolbar';
 import ResumeForm from './components/ResumeForm';
 import ResumePreview from './components/ResumePreview';
 import { exportToPDF } from './utils/pdfExport';
+import { exportToHTML } from './utils/htmlExport';
 import { defaultResume } from './data/defaultResume';
 import './App.css';
 
@@ -72,8 +73,12 @@ function App() {
     });
   }, []);
 
-  const handleExport = useCallback(async () => {
+  const handleExportPDF = useCallback(async () => {
     await exportToPDF('resume-preview', `${resume.personal.fullName || 'resume'}.pdf`);
+  }, [resume.personal.fullName]);
+
+  const handleExportHTML = useCallback(() => {
+    exportToHTML('resume-preview', `${resume.personal.fullName || 'resume'}.html`, resume.personal.fullName || 'Resume');
   }, [resume.personal.fullName]);
 
   const handleReset = useCallback(() => {
@@ -103,7 +108,8 @@ function App() {
         setAccentColor={handleAccentChange}
         fontSize={fontSize}
         setFontSize={handleFontSizeChange}
-        onExport={handleExport}
+        onExportPDF={handleExportPDF}
+        onExportHTML={handleExportHTML}
         onReset={handleReset}
         sectionVisibility={sectionVisibility}
         onToggleAllSections={handleToggleAllSections}
