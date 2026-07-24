@@ -2,8 +2,6 @@
 
 一个纯前端、无需注册的在线简历编辑与美化工具。支持 **4 套精美模板**、**实时预览**、**拖拽排序**、**自定义模块**、**照片上传**和**一键导出 PDF / HTML**，所有数据保存在浏览器本地，无需担心隐私泄露。
 
-**🌐 在线使用：[simon404error.github.io/resume-builder](https://simon404error.github.io/resume-builder/)**
-
 ## 功能特性
 
 ### 模板系统
@@ -143,11 +141,7 @@ const templates = {
 
 ## 部署
 
-项目已通过 GitHub Actions 自动部署至 GitHub Pages，每次推送 `main` 分支后自动更新：
-
-**[https://simon404error.github.io/resume-builder/](https://simon404error.github.io/resume-builder/)**
-
-如需自行部署：
+生产构建后 `dist/` 目录为纯静态文件，可部署到任意静态托管服务：
 
 ```bash
 pnpm build
@@ -155,11 +149,6 @@ pnpm build
 # 使用任意静态服务预览
 npx serve dist
 ```
-
-支持的部署平台：
-- GitHub Pages
-- Vercel / Netlify（拖拽 dist 目录即可）
-- Nginx / Apache 等传统 Web 服务器
 
 ## License
 
