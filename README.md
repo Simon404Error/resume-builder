@@ -39,6 +39,7 @@
 |------|------|
 | 框架 | React 19 |
 | 构建 | Vite 8 |
+| 包管理 | pnpm |
 | 图标 | Lucide React |
 | PDF 导出 | html2canvas + jsPDF |
 | HTML 导出 | DOM Clone + Blob Download |
@@ -52,14 +53,17 @@
 git clone https://github.com/Simon404Error/resume-builder.git
 cd resume-builder
 
+# 安装 pnpm（如未安装）
+npm install -g pnpm
+
 # 安装依赖
-npm install
+pnpm install
 
 # 启动开发服务器
-npm run dev
+pnpm dev
 
 # 生产构建
-npm run build
+pnpm build
 ```
 
 启动后浏览器访问 `http://localhost:5173/` 即可使用。
@@ -76,7 +80,7 @@ npm run build
 
 ### 高级操作
 
-- **拖拽排序**：按住每个条目左侧的拖拽手柄（⋮⋮ 图标）上下拖动，即可调整该条目在当前模块中的排列顺序
+- **拖拽排序**：按住每个条目左侧的拖拽手柄上下拖动，即可调整该条目在当前模块中的排列顺序
 - **隐藏模块**：不需要展示的模块（如证书、语言），点击模块标题右侧的勾选框即可在预览中隐藏
 - **添加条目**：每个模块底部有「添加经历 / 添加技能」等按钮，点击即可新增
 - **删除条目**：每个条目卡片右上角有删除按钮
@@ -145,10 +149,8 @@ const templates = {
 
 如需自行部署：
 
-生产构建后 `dist/` 目录为纯静态文件，可部署到任意静态托管服务：
-
 ```bash
-npm run build
+pnpm build
 
 # 使用任意静态服务预览
 npx serve dist
